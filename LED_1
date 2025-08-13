@@ -1,0 +1,22 @@
+WRITE AN ECP TO BLINK THE LED (ACTIVE LOW) INFINITELY @500MS USING LPC2129
+
+#include<lpc21xx.h>
+void delay_ms(int ms)
+{
+	T0PR=15000-1;
+	T0TCR=0x01;
+	while(T0TC<ms);
+	T0TCR=0x03;
+	T0TCR=0x00;
+}
+int main()
+{
+	IODIR0=0X00000001;
+	while(1)
+	{
+		IOCLR0=1<<0;
+		delay_ms(500);
+		IOSET0=1<<0;
+		delay_ms(500);
+	}
+}
