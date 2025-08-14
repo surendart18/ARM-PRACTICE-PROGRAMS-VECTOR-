@@ -1,4 +1,7 @@
- Write an ECP to blink active low LED which is connnected to p0.17 using LPC2129
+ WRITE AN ECP TO BLINK ACTIVE LOW LED WHICH IS CONNECTED TO P0.17 USING LPC2129 
+
+#INCLUDE <LPC
+
 
 #include<lpc21xx.h>
 #define LED 1<<17
