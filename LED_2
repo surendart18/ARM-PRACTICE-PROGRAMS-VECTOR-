@@ -1,0 +1,26 @@
+ Write an ECP to blink active low LED which is connnected to p0.017 
+
+#include<lpc21xx.h>
+#define LED 1<<17
+typedef unsigned int us;
+
+void delay_ms(us ms)
+{
+	T0PR=15000-1;
+	T0TCR=0x03;
+	T0TCR=0X01;
+	while(T0TC<ms);
+	T0TCR=0x00;
+}
+
+int main()
+{
+	IODIR0|=LED;
+	while(1)
+	{
+		IOCLR0=LED;
+		delay_ms(500);
+		IOSET0=LED;
+		delay_ms(500);
+	}
+}
