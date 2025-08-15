@@ -1,22 +1,25 @@
 WRITE AN ECP TO BLINK THE LED (ACTIVE LOW) INFINITELY @500MS USING LPC2129
 
-#include<lpc21xx.h>
+#include <lpc21xx.h>
+
 void delay_ms(int ms)
 {
-	T0PR=15000-1;
-	T0TCR=0x01;
-	while(T0TC<ms);
-	T0TCR=0x03;
-	T0TCR=0x00;
+    T0PR = 15000 - 1;   // Prescaler: 1 ms at 15 MHz PCLK
+    T0TCR = 0x03;       // Reset timer & disable timer
+    T0TCR = 0x01;       // Enable timer
+    while (T0TC < ms);  // Wait until TC reaches ms
+    T0TCR = 0x00;       // Stop timer
 }
+
 int main()
 {
-	IODIR0=0X00000001;
-	while(1)
-	{
-		IOCLR0=1<<0;
-		delay_ms(500);
-		IOSET0=1<<0;
-		delay_ms(500);
-	}
+    IODIR0 |= (1 << 0); // Set P0.0 as output
+
+    while (1)
+    {
+        IOCLR0 = (1 << 0); // Active-low: LED ON
+        delay_ms(500);     // Wait 500 ms
+        IOSET0 = (1 << 0); // LED OFF
+        delay_ms(500);     // Wait 500 ms
+    }
 }
