@@ -19,7 +19,7 @@ int main()
 	PINSEL0=0x00000000;
 	IODIR0|=LED;	
 	IOSET0=0xff;
-	for(i=0;i<10;i++)
+	for(i=0;i<10;i++)  // also use  while(1) for infinite time 
 	{
 		for(j=0;j<8;j++)
 		{
