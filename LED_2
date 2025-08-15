@@ -1,29 +1,27 @@
- WRITE AN ECP TO BLINK ACTIVE LOW LED WHICH IS CONNECTED TO P0.17 USING LPC2129 
+WRITE AN ECP TO BLINK ACTIVE-LOW LED WHICH IS CONNECTED TO P0.17 USING LPC2129
 
-#INCLUDE <LPC
+#include <lpc21xx.h>
+#define LED (1 << 17)    	// Define LED bit mask for P0.17
+typedef unsigned int us; 
 
-
-#include<lpc21xx.h>
-#define LED 1<<17
-typedef unsigned int us;
 
 void delay_ms(us ms)
 {
-	T0PR=15000-1;
-	T0TCR=0x03;
-	T0TCR=0X01;
-	while(T0TC<ms);
-	T0TCR=0x00;
+    T0PR = 15000 - 1;    // Prescaler for 1ms delay at 15 MHz PCLK
+    T0TCR = 0x03;        // Reset & disable timer
+    T0TCR = 0x01;        // Enable timer
+    while (T0TC < ms);   // Wait until the timer counter reaches 'ms'
+    T0TCR = 0x00;        // Stop timer
 }
 
 int main()
 {
-	IODIR0|=LED;
-	while(1)
-	{
-		IOCLR0=LED;
-		delay_ms(500);
-		IOSET0=LED;
-		delay_ms(500);
-	}
+    IODIR0 |= LED;       // Configure P0.17 as output
+    while (1)
+    {
+        IOCLR0 = LED;    // Active-low: write 0 to turn LED ON
+        delay_ms(500);   // 500 ms ON
+        IOSET0 = LED;    // Write 1 to turn LED OFF
+        delay_ms(500);   // 500 ms OFF
+    }
 }
