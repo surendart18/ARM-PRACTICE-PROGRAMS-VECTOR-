@@ -1,0 +1,32 @@
+WRITE AN ECP TO SHIFT 8 LEDs FROM RIGHT TO LEFT ONE BY ONE @500MS USING LPC2129
+
+#include <lpc21xx.h> 
+#define LED (1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<4 | 1<<5 | 1<<6 | 1<<7)
+typedef unsigned int us;  
+
+void delay_ms(us ms)
+{
+    T0PR = 15000 - 1;              // Prescaler: 15,000 counts = 1 ms (at 15 MHz PCLK)
+    T0TCR = 0x03;                  // Reset & stop Timer0
+    T0TCR = 0x01;                  // Start Timer0
+    while (T0TC < ms);             // Wait until Timer0 counter reaches 'ms'
+    T0TCR = 0x00;                  // Stop Timer0
+}
+
+int main()
+{
+    int i;                        
+    PINSEL0 = 0x00000000;          // Configure P0.0–P0.15 as GPIO
+    IODIR0 |= LED;                 // Set P0.0–P0.7 as output (LED control pins)
+    IOSET0 = 0xFF;                  // Turn OFF all LEDs initially (active-low LEDs)
+
+    while (1)                      // Infinite loop
+    {
+        for (i = 7; i >= 0; i--)   // Start from rightmost LED (P0.7) to leftmost LED (P0.0)
+        {
+            IOCLR0 = 1 << i;       // Turn ON current LED (active-low: writing 0 turns ON)
+            delay_ms(500);         // Wait 500ms
+            IOSET0 = 1 << i;       // Turn OFF current LED (writing 1 turns OFF)
+        }
+    }
+}
