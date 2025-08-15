@@ -1,28 +1,29 @@
-Write an ECP to blink 2 active low LEDs which are connnected to p0.17 & p0.18 using LPC2129 
+WRITE AN ECP TO BLINK 2 ACTIVE-LOW LEDS CONNECTED TO P0.17 AND P0.18 USING LPC2129 @ 500 MS ON/OFF INTERVAL
 
-#include<lpc21xx.h>
-#define LED1 1<<17
-#define LED2 1<<18
-typedef unsigned int us;
+#include <lpc21xx.h> 
+#define LED1 (1 << 17)    // Bit mask for LED1 at P0.17
+#define LED2 (1 << 18)    // Bit mask for LED2 at P0.18
+typedef unsigned int us; 
+
 
 void delay_ms(us ms)
 {
-	T0PR=15000-1;
-	T0TCR=0x03;
-	T0TCR=0X01;
-	while(T0TC<ms);
-	T0TCR=0x00;
+    T0PR = 15000 - 1;     // Prescaler for 1 ms (PCLK = 15 MHz)
+    T0TCR = 0x03;         // Reset and stop Timer0
+    T0TCR = 0x01;         // Start Timer0
+    while (T0TC < ms);    // Wait until 'ms' milliseconds elapsed
+    T0TCR = 0x00;         // Stop Timer0
 }
 
 int main()
 {
-	IODIR0|=LED1|LED2;
-	while(1)
-	{
-		IOCLR0=LED1|LED2;
-		delay_ms(500);
-		IOSET0=LED1|LED2;
-		delay_ms(500);
-	}
-}
+    IODIR0 |= LED1 | LED2;   // Configure pins P0.17 and P0.18 as output
+    while (1) 				// Infinite loop
+    {
+        IOCLR0 = LED1 | LED2; // Turn ON both LEDs (active-low)
+        delay_ms(500);        // Wait 500 ms
 
+        IOSET0 = LED1 | LED2; // Turn OFF both LEDs
+        delay_ms(500);        // Wait 500 ms
+    }
+}
