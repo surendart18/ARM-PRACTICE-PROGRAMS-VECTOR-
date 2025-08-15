@@ -1,0 +1,23 @@
+WRITE AN ECP TO CONTROL THE LED USING PUSH BUTTON SWITCH 
+
+#include<lpc21xx.h>          
+#define LED (1<<17)          // LED connected to P0.17
+#define SW  14               // Push-button switch connected to P0.14
+typedef unsigned int us;    
+
+int main()
+{
+    IODIR0|= LED;           // Set P0.17 as output (for LED)
+    while(1)                 
+    {
+        // Read switch state (active-low: 0 = pressed, 1 = released)
+        if(((IOPIN0>>SW)&1)==0)  
+        {
+            IOCLR0 = LED;     // Turn ON LED (active-low)
+        }
+        else
+        {
+            IOSET0 = LED;     // Turn OFF LED (active-low)
+        }
+    }
+}
