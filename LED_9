@@ -1,0 +1,45 @@
+WRITE AN ECP TO DISPLAY THE CONVERGENCE AND DIVERGENCE CUMULATIVELY ON 8 LEDs USING LPC2129 
+
+#include <lpc21xx.h>
+typedef unsigned int us;
+#define LED 0xff
+
+void delay_ms(us ms)
+{
+    T0PR = 15000-1;   // Set prescaler: 1 tick = 1 us (assuming PCLK = 15 MHz)
+    T0TC = 0;         // Reset timer counter
+    T0TCR = 0x01;     // Start timer
+    while(T0TC < ms); // Wait until timer reaches 'ms'
+    T0TCR = 0x00;     // Stop timer
+}
+
+int main()
+{
+    int i;
+    PINSEL0 = 0x00000000;  // Configure P0.0-P0.7 as GPIO
+    IODIR0 |= LED;         // Set P0.0-P0.7 as output
+
+    while(1)
+    {
+        // --------- Convergence: edges to center ----------
+			
+        IOSET0 = LED;       // Turn OFF all LEDs initially (active-low: 1 = OFF)
+        for(i=0;i<4;i++)    
+        {
+                IOCLR0 =(1<<i)|(1<<(7-i));  		  // Turn ON left and right LEDs
+                delay_ms(100);                      // Short delay to visualize
+        }
+
+        // --------- Divergence: center to edges ----------
+				
+        IOSET0 = LED;        // Turn OFF all LEDs initially
+        delay_ms(150);       // Pause before starting divergence
+
+        for(i=0;i<4;i++)  
+        {
+                IOCLR0 = (1<<(3-i))|(1<<(4+i));  // Turn ON center LEDs expanding outward
+                delay_ms(100);                             // Short delay to visualize
+        }
+    }
+}
+
