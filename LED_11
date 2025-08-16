@@ -1,0 +1,53 @@
+WRITE AN ECP TO CONTROL 4 LEDs (ACTIVE LOW) USING 4 SWITCHES (ACTIVE LOW) USING LPC2129
+   SW1 -> LED1, 
+	 SW2 -> LED2, 
+	 SW3 -> LED3, 
+	 SW4 -> LED4
+   NO SWITCH PRESSED -> ALL LEDs OFF 
+
+
+
+#include <lpc21xx.h>
+
+// Define LEDs as P0.0 – P0.3 (active low)
+#define LED1 (1 << 0)
+#define LED2 (1 << 1)
+#define LED3 (1 << 2)
+#define LED4 (1 << 3)
+
+// Define switches as P0.4 – P0.7 (active low)
+#define SW1 4
+#define SW2 5
+#define SW3 6
+#define SW4 7
+
+int main()
+{
+    IODIR0 |= LED1 | LED2 | LED3 | LED4;					// Configure LED pins as output
+    IOSET0 = LED1 | LED2 | LED3 | LED4; 					// Initially turn all LEDs OFF (active low, so HIGH = OFF)
+    while(1)
+    {
+        if (((IOPIN0 >> SW1) & 1) == 0)	      		// Check SW1 (active low)
+        {
+            IOCLR0 = LED1;  											// Turn LED1 ON
+        }
+        else if (((IOPIN0 >> SW2) & 1) == 0)   		// Check SW2
+        {
+            IOCLR0 = LED2;  											// Turn LED2 ON
+        }
+        else if (((IOPIN0 >> SW3) & 1) == 0)   		// Check SW3
+        {
+            IOCLR0 = LED3;  											// Turn LED3 ON
+        }
+        else if (((IOPIN0 >> SW4) & 1) == 0)  		// Check SW4
+        {
+            IOCLR0 = LED4; 												// Turn LED4 ON
+        }
+        else																			// No switches pressed 
+        {
+            IOSET0 = LED1 | LED2 | LED3 | LED4;   //	Turn all LEDs OFF
+        }
+    }
+}
+
+
