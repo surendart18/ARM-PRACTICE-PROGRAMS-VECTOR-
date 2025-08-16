@@ -1,0 +1,65 @@
+WRITE AN ECP TO DISPLAY 'A' ON 16*2 ALPHANUMERIC LCD USING LPC2129
+
+
+#include<lpc21xx.h>         
+#define LCD_D  (0xff<<0)     // LCD data lines connected to P0.0-P0.7
+#define RS     1<<8          // LCD Register Select connected to P0.8
+#define E      1<<9          // LCD Enable pin connected to P0.9
+
+typedef unsigned int us;     
+typedef unsigned char u8;   
+
+// -------------------- Delay function --------------------
+void delay_ms(us ms)
+{
+    T0PR = 15000-1;           // Set prescaler: 1 tick = 1 µs (assuming PCLK = 15 MHz)
+    T0TCR = 0x03;             // Reset and enable timer
+    T0TCR = 0x01;             // Start timer
+    while(T0TC < 1);          // Wait for timer count
+    T0TCR = 0x00;             // Stop timer
+}
+
+// -------------------- Function declarations --------------------
+void LCD_INIT(void);          // Initialize LCD
+void LCD_COMMAND(u8);         // Send command to LCD
+void LCD_DATA(u8);            // Send data to LCD
+
+// -------------------- Main program --------------------
+int main()
+{
+    LCD_INIT();               // Initialize the LCD
+    LCD_DATA('A');            // Display character 'A' on LCD
+}
+
+// -------------------- LCD Initialization --------------------
+void LCD_INIT(void)
+{
+    IODIR0 |= LCD_D | RS | E; // Set LCD data and control pins as output
+    LCD_COMMAND(0X01);        // Clear display
+    LCD_COMMAND(0X02);        // Return home
+    LCD_COMMAND(0X0C);        // Display ON, cursor OFF
+    LCD_COMMAND(0X38);        // 8-bit interface mode with 2-line
+    LCD_COMMAND(0X80);        // Set cursor at first line, first position Address of DDRAM
+}
+
+// -------------------- Send command to LCD --------------------
+void LCD_COMMAND(u8 cmd)
+{
+    IOCLR0 = LCD_D;           // Clear LCD data pins
+    IOSET0 = cmd;             // Put command on data pins
+    IOCLR0 = RS;              // RS = 0 for command
+    IOSET0 = E;               // Enable HIGH
+    delay_ms(2);              // Short delay to latch command
+    IOCLR0 = E;               // Enable LOW
+}
+
+// -------------------- Send data to LCD --------------------
+void LCD_DATA(u8 d)
+{
+    IOCLR0 = LCD_D;           // Clear LCD data pins
+    IOSET0 = d;               // Put data on pins
+    IOSET0 = RS;              // RS = 1 for data
+    IOSET0 = E;               // Enable HIGH
+    delay_ms(2);              // Short delay to latch data
+    IOCLR0 = E;               // Enable LOW
+}
