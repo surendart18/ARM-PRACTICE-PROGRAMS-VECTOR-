@@ -1,0 +1,129 @@
+WRITE AN ECP TO DISPLAY THE BINARY OF THE GIVEN INTEGER ON 16X2 ALPHANUMERIC LCD USING LPC2129
+
+#include <lpc21xx.h>  
+#define LCD_D  (0xff<<0)      // LCD data lines connected to P0.0 – P0.7
+#define RS     (1<<8)         // Register Select pin (P0.8)
+#define E      (1<<9)         // Enable pin (P0.9)
+typedef unsigned int us;  
+typedef unsigned char u8;  
+
+// -------------------- Delay Function --------------------
+
+void delay_ms(us ms)
+{
+    T0PR = 15000 - 1;         // Set prescaler for 1 ms tick (assuming PCLK = 15 MHz)
+    T0TCR = 0x03;             // Reset and enable Timer0
+    T0TCR = 0x01;             // Start Timer0
+    while (T0TC < ms);        // Wait until timer reaches required milliseconds
+    T0TCR = 0x00;             // Stop Timer0
+}
+
+// -------------------- Function Prototypes --------------------
+
+void LCD_INIT(void);          // Initialize LCD
+void LCD_COMMAND(u8 cmd);     // Send command to LCD
+void LCD_DATA(u8 data);       // Send character to LCD
+void LCD_INTEGER(int n);      // Display integer number
+void LCD_FLOAT(float f);      // Display floating-point number
+void LCD_BINARY(us n);        // Display binary representation
+
+// -------------------- Main Program --------------------
+
+int main()
+{              
+    LCD_INIT();               // Initialize LCD
+    LCD_COMMAND(0x80);        // Set cursor to first row, first column
+    LCD_BINARY(1535);         // Display binary of the number (works, though >255)
+}
+
+// -------------------- LCD Initialization --------------------
+void LCD_INIT(void)
+{
+    IODIR0 |= LCD_D | RS | E; // Set LCD pins as output
+    LCD_COMMAND(0x01);        // Clear display
+    LCD_COMMAND(0x02);        // Return cursor home
+    LCD_COMMAND(0x0C);        // Display ON, cursor OFF
+    LCD_COMMAND(0x38);        // 8-bit mode, 2 lines
+    LCD_COMMAND(0x80);        // Set cursor to row 1, column 1
+}
+
+// -------------------- Send Command to LCD --------------------
+
+void LCD_COMMAND(u8 cmd)
+{
+    IOCLR0 = LCD_D;           // Clear data lines
+    IOSET0 = cmd;             // Put command on data lines
+    IOCLR0 = RS;              // RS = 0 for command
+    IOSET0 = E;               // Enable HIGH to latch command
+    delay_ms(2);              // Small delay for LCD to process command
+    IOCLR0 = E;               // Enable LOW to finish latch
+}
+
+// -------------------- Send Data (Character) to LCD --------------------
+
+void LCD_DATA(u8 d)
+{
+    IOCLR0 = LCD_D;           // Clear data lines
+    IOSET0 = d;               // Put data byte on data lines
+    IOSET0 = RS;              // RS = 1 for data
+    IOSET0 = E;               // Enable HIGH to latch data
+    delay_ms(2);              // Small delay for LCD to process data
+    IOCLR0 = E;               // Enable LOW to finish latch
+}
+
+// -------------------- Display Integer on LCD --------------------
+void LCD_INTEGER(int n)
+{
+    u8 arr[5];                // Buffer to store digits
+    signed char i = 0;        // Index counter
+
+    if (n == 0)               // Special case: 0
+    {
+        LCD_DATA('0');        // Display '0'
+    }
+    else
+    {
+        if (n < 0)            // Handle negative numbers
+        {
+            LCD_DATA('-');    // Display minus sign
+            n = -n;           // Convert to positive
+        }
+        while (n > 0)         // Extract digits from least significant to most
+        {
+            arr[i++] = n % 10; // Store last digit
+            n = n / 10;        // Remove last digit
+        }
+        for (i = i - 1; i >= 0; i--) // Print digits in correct order
+        {
+            LCD_DATA(arr[i] + '0'); // Convert digit to ASCII and display
+        }
+    }
+}
+
+// -------------------- Display Float on LCD --------------------
+
+void LCD_FLOAT(float f)
+{
+    int temp = f;              // Extract integer part
+    LCD_INTEGER(temp);         // Display integer part
+    LCD_DATA('.');             // Display decimal point
+    temp = (f - temp) * 1000; // Extract 3 decimal places
+    LCD_INTEGER(temp);         // Display fractional part
+}
+
+// -------------------- Display Binary on LCD --------------------
+
+void LCD_BINARY(us n)
+{
+    int num, i;
+    for(i = 31; i >= 0; i--)           // Loop through all 32 bits
+    {
+        if(i == 15)                     // When reaching bit 16, move cursor to second row
+        {
+            LCD_COMMAND(0xC0);          // Row 2, column 1
+        }
+        num = (n >> i) & 1;             // Extract current bit
+        LCD_DATA(num + 48);             // Convert to ASCII and display
+    }
+}
+
