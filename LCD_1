@@ -12,10 +12,10 @@ typedef unsigned char u8;
 // -------------------- Delay function --------------------
 void delay_ms(us ms)
 {
-    T0PR = 15000-1;           // Set prescaler: 1 tick = 1 µs (assuming PCLK = 15 MHz)
+    T0PR = 15000-1;           // Set prescaler: 1 ms per increment (assuming PCLK = 15 MHz)
     T0TCR = 0x03;             // Reset and enable timer
     T0TCR = 0x01;             // Start timer
-    while(T0TC < 1);          // Wait for timer count
+    while(T0TC < ms);          // Wait for timer count
     T0TCR = 0x00;             // Stop timer
 }
 
