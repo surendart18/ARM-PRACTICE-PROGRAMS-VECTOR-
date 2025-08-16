@@ -1,0 +1,116 @@
+WRITE AN ECP TO DISPLAY FLOAT NUMBER ON 16x2 ALPHANUMERIC LCD USING LPC2129 
+
+#include <lpc21xx.h>  
+#define LCD_D  (0xff<<0)      // LCD data lines (P0.0 – P0.7)
+#define RS     (1<<8)         // RS control pin (P0.8) - Register Select
+#define E      (1<<9)         // E control pin (P0.9) - Enable
+typedef unsigned int us;  
+typedef unsigned char u8;  
+
+// -------------------- Delay Function --------------------
+
+void delay_ms(us ms)
+{
+    T0PR = 15000 - 1;         // Prescaler for 1 ms tick (PCLK = 15 MHz)
+    T0TCR = 0x03;             // Reset and enable Timer0
+    T0TCR = 0x01;             // Start Timer0
+    while (T0TC < ms);        // Wait until required ms delay
+    T0TCR = 0x00;             // Stop Timer0
+}
+
+// -------------------- Function Prototypes --------------------
+
+void LCD_INIT(void);          // Initialize LCD
+void LCD_COMMAND(u8 cmd);     // Send command to LCD
+void LCD_DATA(u8 data);       // Send character to LCD
+void LCD_INTEGER(int n);      // Display integer number
+void LCD_FLOAT(float f);      // Display floating-point number
+
+// -------------------- Main Program --------------------
+
+int main()
+{              
+    LCD_INIT();               // Initialize LCD
+    while (1)                 // Infinite loop
+    {
+        LCD_COMMAND(0x80);    // Set cursor to first row, first column
+        LCD_FLOAT(1234.123);  // Display float value
+    }
+}
+
+// -------------------- LCD Initialization --------------------
+
+void LCD_INIT(void)
+{
+    IODIR0|=LCD_D|RS|E;       // Set LCD pins as output
+    LCD_COMMAND(0x01);        // Clear display
+    LCD_COMMAND(0x02);        // Return home
+    LCD_COMMAND(0x0C);        // Display ON, cursor OFF
+    LCD_COMMAND(0x38);        // 8-bit mode, 2 lines
+    LCD_COMMAND(0x80);        // Set cursor to row 1, column 1
+}
+
+// -------------------- Send Command to LCD --------------------
+
+void LCD_COMMAND(u8 cmd)
+{
+    IOCLR0 = LCD_D;           // Clear data lines
+    IOSET0 = cmd;             // Put command on data lines
+    IOCLR0 = RS;              // RS = 0 for command mode
+    IOSET0 = E;               // Enable HIGH to latch data
+    delay_ms(2);              // Small delay for LCD processing
+    IOCLR0 = E;               // Enable LOW to finish latch
+}
+
+// -------------------- Send Data (Character) to LCD --------------------
+
+void LCD_DATA(u8 d)
+{
+    IOCLR0 = LCD_D;           // Clear data lines
+    IOSET0 = d;               // Put data byte on data lines
+    IOSET0 = RS;              // RS = 1 for data mode
+    IOSET0 = E;               // Enable HIGH to latch data
+    delay_ms(2);              // Small delay for LCD processing
+    IOCLR0 = E;               // Enable LOW to finish latch
+}
+
+// -------------------- Display Integer on LCD --------------------
+
+void LCD_INTEGER(int n)
+{
+    u8 arr[5];                // Buffer for storing digits
+    signed char i = 0;        // Index counter
+    if (n == 0)                // If number is zero
+    {
+        LCD_DATA('0');         // Display '0'
+    }
+    else
+    {
+        if (n < 0)             // If number is negative
+        {
+            LCD_DATA('-');     // Display minus sign
+            n=-n;              // Make number positive
+        }
+        while (n>0)            // Extract digits
+        {
+            arr[i++]=n % 10;   // Store last digit
+            n=n/10;            // Remove last digit
+        }
+        for (i=i-1;i>=0;i--)
+        {
+            LCD_DATA(arr[i]+48); // Convert digit to ASCII
+        }
+    }
+}
+
+// -------------------- Display Float on LCD --------------------
+
+void LCD_FLOAT(float f)
+{
+    int temp=f;                // Extract integer part
+    LCD_INTEGER(temp);         // Display integer part
+    LCD_DATA('.');             // Display decimal point
+    temp=(f-temp)*1000;        // Extract 3 decimal places
+    LCD_INTEGER(temp);         // Display fractional part
+}
+
