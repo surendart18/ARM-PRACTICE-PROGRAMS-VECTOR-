@@ -1,0 +1,75 @@
+WRITE AN ECP TO DISPLAY TWO DIGIT INTEGER 24 ON 16*2 ALPHANUMERIC LCD USING LPC2129
+
+#include <lpc21xx.h>
+#define LCD_D  (0xff<<0)      // Mask for LCD data lines (P0.0–P0.7)
+#define RS     (1<<8)         // RS (Register Select) pin mask (P0.8)
+#define E      (1<<9)         // Enable pin mask (P0.9)
+typedef unsigned int us;      
+typedef unsigned char u8;     
+
+// -------------------- Delay Function --------------------
+
+void delay_ms(us ms)
+{
+    T0PR = 15000 - 1;         // Prescaler: generates 1 ms tick when PCLK = 15 MHz
+    T0TCR = 0x03;             // Reset & enable timer
+    T0TCR = 0x01;             // Start timer
+    while (T0TC < ms);        // Wait until Timer Counter reaches 'ms'
+    T0TCR = 0x00;             // Stop timer
+}
+
+// -------------------- Function Declarations --------------------
+
+void LCD_INIT(void);          // Initialize LCD
+void LCD_COMMAND(u8 cmd);     // Send command to LCD
+void LCD_DATA(u8 data);       // Send data (character) to LCD
+
+// -------------------- Main Program --------------------
+
+int main()
+{
+    int n = 24;               // The number to be displayed
+    LCD_INIT();               // Initialize the LCD module
+    while (1)                 // Infinite loop
+    {
+        LCD_COMMAND(0x80);    // Move cursor to 1st row, 1st column
+        LCD_DATA((n / 10) + 48); // Display the tens digit (convert to ASCII by adding 48)
+        LCD_DATA((n % 10) + 48); // Display the ones digit (convert to ASCII by adding 48)
+    }
+}
+
+// -------------------- LCD Initialization --------------------
+
+void LCD_INIT(void)
+{
+    IODIR0 |= LCD_D | RS | E; // Configure data & control pins as output
+    LCD_COMMAND(0x01);        // Clear display
+    LCD_COMMAND(0x02);        // Return cursor to home position
+    LCD_COMMAND(0x0C);        // Display ON, cursor OFF
+    LCD_COMMAND(0x38);        // 8-bit mode, 2 lines, 5x7 font
+    LCD_COMMAND(0x80);        // Set cursor to row 1, col 1
+}
+
+// -------------------- Send Command to LCD --------------------
+
+void LCD_COMMAND(u8 cmd)
+{
+    IOCLR0 = LCD_D;           // Clear previous data bits on port
+    IOSET0 = cmd;             // Place command byte on data lines
+    IOCLR0 = RS;              // RS = 0 for command mode
+    IOSET0 = E;               // Set Enable HIGH
+    delay_ms(2);              // Wait for LCD to process command
+    IOCLR0 = E;               // Set Enable LOW to latch command
+}
+
+// -------------------- Send Data/Character to LCD --------------------
+
+void LCD_DATA(u8 d)
+{
+    IOCLR0 = LCD_D;           // Clear previous data bits on port
+    IOSET0 = d;               // Place data byte on data lines
+    IOSET0 = RS;              // RS = 1 for data mode
+    IOSET0 = E;               // Set Enable HIGH
+    delay_ms(2);              // Wait for LCD to process data
+    IOCLR0 = E;               // Set Enable LOW to latch data
+}
