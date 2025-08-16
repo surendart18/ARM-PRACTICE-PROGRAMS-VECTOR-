@@ -1,0 +1,31 @@
+WRITE AN ECP TO DISPLAY ONE CUSTOM SYMBOL ON 16X2 ALPHANUMERIC LCD 
+
+#include "delay.h"  
+#include "LCD.h"     
+
+void LCD_CGRAM(int n); // Function to write custom symbol to CGRAM
+
+// Lookup Table (LUT) for the custom symbol (8 bytes = 8 rows)
+u8 LUT[] = {0x00, 0x17, 0x14, 0x1F, 0x05, 0x05, 0x1D, 0x00};
+
+int main()
+{
+    LCD_INIT();           // Initialize the LCD
+    LCD_COMMAND(0x80);    // Set cursor to first row, first column
+    LCD_STR("Symbol: ");  // Display text
+    LCD_CGRAM(8);         // Write 8 bytes of custom symbol to CGRAM
+    LCD_COMMAND(0x88);    // Move cursor to second column on first row
+    LCD_DATA(0);          // Display custom symbol stored at CGRAM location 0
+}
+
+// -------------------- Write custom symbol to CGRAM --------------------
+void LCD_CGRAM(int n)
+{
+    u8 i;
+    LCD_COMMAND(0x40); // 0x40 = Set CGRAM address to 0 (start of custom symbol)
+    for(i = 0; i < n; i++)
+    {
+        LCD_DATA(LUT[i]); // Send each row pattern to CGRAM
+    }
+}
+
