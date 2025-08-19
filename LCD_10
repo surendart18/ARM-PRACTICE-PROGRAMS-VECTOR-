@@ -1,0 +1,24 @@
+/* WRITE AN ECP TO DISPLAY SWITCH COUNT ON 16X2 ALPHANUMERIC LCD USING LPC2129 */
+
+#include "delay.h"
+#include "LCD.h"
+#define SW 10   // Switch pin number (P0.10)
+
+int main()
+{
+    u8 count = 0;             
+    LCD_INIT();               										// Initialize LCD
+    LCD_COMMAND(0x80);       										 // Move cursor to first line, first position
+    LCD_STR("Switch Count: "); 										// Print title on LCD
+    while(1)
+    {
+        if(((IOPIN0 >> SW) & 1) == 0)							// Check if switch is pressed (active low = 0)
+        {
+            delay_ms(200);        								// Debounce delay to avoid multiple counts
+            count++;              								// Increment count
+            LCD_COMMAND(0xC0);    								// Move cursor to second line
+            LCD_INTEGER(count);   								// Display count value
+            while(((IOPIN0 >> SW) & 1) == 0);			// Wait until switch is released (goes back to high)
+        }
+    }
+}
