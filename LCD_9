@@ -1,0 +1,34 @@
+/* WRITE AN ECP TO DISPLAY ANIMATED BATTERY PATTERN ON 16X2 ALPHANUMERIC LCD DISPLAY USING LPC2129 */
+
+
+#include "delay.h"  
+#include "LCD.h"   
+
+// LUT: 6 battery levels × 8 bytes each = 48 bytes
+// Each set of 8 bytes represents one battery symbol
+u8 LUT[] = {
+    0x0E, 0x1B, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1F,  // Battery level 0
+    0x0E, 0x1B, 0x11, 0x11, 0x11, 0x11, 0x1F, 0x1F,  // Battery level 1
+    0x0E, 0x1B, 0x11, 0x11, 0x11, 0x1F, 0x1F, 0x1F,  // Battery level 2
+    0x0E, 0x1B, 0x11, 0x11, 0x1F, 0x1F, 0x1F, 0x1F,  // Battery level 3
+    0x0E, 0x1B, 0x11, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F,  // Battery level 4
+    0x0E, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F   // Battery level 5
+};
+
+int main()
+{
+    u8 c = 48;         	 		// Total number of bytes in LUT (6 symbols × 8 bytes)
+    u8 symbol = 0;      		// Index of current battery symbol (0–5)
+    LCD_INIT();         		// Initialize LCD
+    LCD_CGRAM(LUT,c);       // Write all 6 battery symbols to CGRAM
+    while(1)
+    {
+        LCD_COMMAND(0x80);    // Set cursor to first row, first column
+        LCD_DATA(symbol++);   // Display current battery symbol
+        delay_ms(200);        // Delay to create animation effect
+        if(symbol == 6)       // Loop back after last symbol
+        {
+            symbol = 0;
+        }   
+    }
+}
